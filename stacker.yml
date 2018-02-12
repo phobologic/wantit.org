@@ -1,0 +1,57 @@
+sys_path: .
+
+namespace: wantit-org
+
+stacks:
+  - name: buckets
+    class_path: stacker_blueprints.s3.Buckets
+    variables:
+      Buckets:
+        Radio:
+          BucketName: radio.wantit.org
+          AccessControl: PublicRead
+          WebsiteConfiguration:
+            IndexDocument: index.html
+        Wantit:
+          BucketName: wantit.org
+          WebsiteConfiguration:
+            RedirectAllRequestsTo:
+              HostName: radio.wantit.org
+              Protocol: http
+        WWW:
+          BucketName: www.wantit.org
+          WebsiteConfiguration:
+            RedirectAllRequestsTo:
+              HostName: radio.wantit.org
+              Protocol: http
+  - name: dns
+    class_path: stacker_blueprints.route53.DNSRecords
+    variables:
+      HostedZoneName: wantit.org.
+      Comment: wantit.org domain managed by stacker
+      RecordSets:
+        - Name: wantit.org.
+          Type: MX
+          TTL: 3600
+          ResourceRecords:
+            - 1 ASPMX.L.GOOGLE.COM
+            - 5 ALT1.ASPMX.L.GOOGLE.COM
+            - 5 ALT2.ASPMX.L.GOOGLE.COM
+            - 10 ALT3.ASPMX.L.GOOGLE.COM
+            - 10 ALT4.ASPMX.L.GOOGLE.COM
+        - Name: wantit.org.
+          Type: A
+          AliasTarget:
+            DNSName: ${output buckets::WantitWebsiteEndpoint}
+        - Name: www.wantit.org.
+          Type: A
+          AliasTarget:
+            DNSName: ${output buckets::WWWWebsiteEndpoint}
+        - Name: radio.wantit.org.
+          Type: A
+          AliasTarget:
+            DNSName: ${output buckets::RadioWebsiteEndpoint}
+        - Name: stream.wantit.org.
+          Type: A
+          AliasTarget:
+            DNSName: radio.wantit.org.
